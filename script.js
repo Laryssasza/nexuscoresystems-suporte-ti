@@ -1,13 +1,11 @@
 
 const HF_API_KEY = "hf_jZSjOMnjkqQPfkqAcAEoqaoEdCytLrKlC";
 
-// Usuários pré-cadastrados manualmente no código (1 Cliente e 1 Atendente)
 const usuariosManuaisPreCadastrados = [
     { nome: "Carlos Cliente", email: "cliente@nexus.com", senha: "123", tipo: "cliente" },
     { nome: "Ana Suporte TI", email: "atendente@nexus.com", senha: "123", tipo: "atendente" }
 ];
 
-// Inicializa a lista de usuários no localStorage se estiver vazia
 if (!localStorage.getItem('nexus_usuarios_cadastrados')) {
     localStorage.setItem('nexus_usuarios_cadastrados', JSON.stringify(usuariosManuaisPreCadastrados));
 }
@@ -17,6 +15,9 @@ let chamados = JSON.parse(localStorage.getItem('nexus_chamados')) || [
     { id: '1001', assunto: 'Falha no acesso ao ERP', categoria: 'Sistemas e Software', descricao: 'Erro 502 ao tentar logar no sistema financeiro.', status: 'Pendente', autor: 'Carlos Cliente' }
 ];
 let conversasChat = JSON.parse(localStorage.getItem('nexus_chats')) || [];
+
+// Variável para controlar se o usuário já enviou a primeira mensagem
+let primeiraMensagemEnviada = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     atualizarNavbarAuth();
@@ -117,7 +118,6 @@ function fazerCadastro(e) {
 
     const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
     
-    // Verifica se já existe
     if (listaUsuarios.some(u => u.email === email)) {
         alert('Este e-mail já está cadastrado.');
         return;
@@ -154,7 +154,6 @@ function fazerLogin(e) {
     if (usuarioEncontrado) {
         usuarioLogado = usuarioEncontrado;
     } else {
-        // Fallback dinâmico para novos testes rápidos
         const tipoInferido = (email.includes('admin') || email.includes('suporte') || email.includes('atendente')) ? 'atendente' : 'cliente';
         usuarioLogado = { nome: email.split('@')[0], email, tipo: tipoInferido };
     }
@@ -313,7 +312,7 @@ function atenderChat(idx) {
 }
 
 // ==========================================
-// CHATBOT E IA (LLAMA 3 / FALLBACK)
+// CHATBOT E TÓPICOS INTERATIVOS
 // ==========================================
 function toggleChatbot() {
     const janela = document.getElementById('chatbot-window');
@@ -331,6 +330,14 @@ function handleChatKey(e) {
     }
 }
 
+function enviarMensagemTextoDireto(texto) {
+    const input = document.getElementById('chat-input');
+    if (input) {
+        input.value = texto;
+        enviarMensagemChat();
+    }
+}
+
 function gerarRespostaSimulada(texto) {
     const t = texto.toLowerCase();
     if (t.includes('vpn') || t.includes('rede')) {
@@ -339,7 +346,11 @@ function gerarRespostaSimulada(texto) {
     if (t.includes('senha') || t.includes('login') || t.includes('acesso')) {
         return "Para redefinir sua senha corporativa, utilize a opção de recuperação na tela de login ou abra um chamado na categoria Acessos.";
     }
-    return "Compreendi sua dúvida técnica. Como assistente virtual da Nexus Core, recomendo consultar nossa Base de Conhecimento ou solicitar atendimento humano.";
+    if (t.includes('atendente') || t.includes('humano')) {
+        solicitarAtendimentoHumano();
+        return "Encaminhando para um analista humano...";
+    }
+    return "Compreendi sua dúvida técnica. Como assistente virtual da Nexus Core, selecione uma das opções abaixo ou digite sua dúvida:";
 }
 
 async function enviarMensagemChat() {
@@ -352,9 +363,19 @@ async function enviarMensagemChat() {
     adicionarMensagemUI(texto, 'user');
     input.value = '';
 
+    // Marca que o usuário já enviou a primeira mensagem
+    const eraPrimeiraMensagem = !primeiraMensagemEnviada;
+    primeiraMensagemEnviada = true;
+
     if (!HF_API_KEY || HF_API_KEY === "SUA_CHAVE_HUGGINGFACE_AQUI") {
         setTimeout(() => {
-            adicionarMensagemUI(gerarRespostaSimulada(texto), 'bot');
+            const resp = gerarRespostaSimulada(texto);
+            adicionarMensagemUI(resp, 'bot');
+            
+            // Se foi a primeira mensagem, exibe os tópicos sugeridos logo após
+            if (eraPrimeiraMensagem) {
+                adicionarTopicosSugestoesUI();
+            }
         }, 800);
         return;
     }
@@ -373,7 +394,7 @@ async function enviarMensagemChat() {
                 messages: [
                     { 
                         role: "system", 
-                        content: "Você é o Nexus Copilot AI, um assistente virtual especialista em suporte de TI e sistemas da Nexus Core Systems. Seja objetivo, prestativo e ajude colaboradores com problemas de VPN, hardware, softwares e senhas." 
+                        content: "Você é o Nexus Copilot AI, assistente virtual de TI da Nexus Core Systems. Seja objetivo e prestativo." 
                     },
                     { role: "user", content: texto }
                 ],
@@ -392,11 +413,38 @@ async function enviarMensagemChat() {
         const respostaIA = data.choices[0].message.content;
         adicionarMensagemUI(respostaIA, 'bot');
 
+        if (eraPrimeiraMensagem) {
+            adicionarTopicosSugestoesUI();
+        }
+
     } catch (error) {
         removerMensagemCarregamento();
         const respostaFallback = gerarRespostaSimulada(texto);
         adicionarMensagemUI(respostaFallback, 'bot');
+
+        if (eraPrimeiraMensagem) {
+            adicionarTopicosSugestoesUI();
+        }
     }
+}
+
+function adicionarTopicosSugestoesUI() {
+    const container = document.getElementById('chatbot-messages');
+    if (!container) return;
+
+    const topicosDiv = document.createElement('div');
+    topicosDiv.className = 'chat-msg-row bot';
+    topicosDiv.innerHTML = `
+        <div class="chat-avatar-bot"><i class="fa-solid fa-robot"></i></div>
+        <div class="chat-bubble bot" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <span>💡 <strong>Tópicos sugeridos de atendimento:</strong></span>
+            <button onclick="enviarMensagemTextoDireto('Como configurar a VPN?')" style="background:#0284c7; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; text-align:left; font-size:12px;">📁 Configuração de VPN e Rede</button>
+            <button onclick="enviarMensagemTextoDireto('Esqueci minha senha')" style="background:#0284c7; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; text-align:left; font-size:12px;">🔑 Redefinição de Senha e Acesso</button>
+            <button onclick="solicitarAtendimentoHumano()" style="background:#059669; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; text-align:left; font-size:12px;"><i class="fa-solid fa-headset"></i> Falar com Atendente Humano</button>
+        </div>
+    `;
+    container.appendChild(topicosDiv);
+    container.scrollTop = container.scrollHeight;
 }
 
 function adicionarMensagemUI(texto, remetente) {
