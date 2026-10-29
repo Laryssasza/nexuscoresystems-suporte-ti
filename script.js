@@ -1,9 +1,20 @@
 
 const HF_API_KEY = "hf_jZSjOMnjkqQPfkqAcAEoqaoEdCytLrKlC";
 
+// Usuários pré-cadastrados manualmente no código (1 Cliente e 1 Atendente)
+const usuariosManuaisPreCadastrados = [
+    { nome: "Carlos Cliente", email: "cliente@nexus.com", senha: "123", tipo: "cliente" },
+    { nome: "Ana Suporte TI", email: "atendente@nexus.com", senha: "123", tipo: "atendente" }
+];
+
+// Inicializa a lista de usuários no localStorage se estiver vazia
+if (!localStorage.getItem('nexus_usuarios_cadastrados')) {
+    localStorage.setItem('nexus_usuarios_cadastrados', JSON.stringify(usuariosManuaisPreCadastrados));
+}
+
 let usuarioLogado = JSON.parse(localStorage.getItem('nexus_usuario')) || null;
 let chamados = JSON.parse(localStorage.getItem('nexus_chamados')) || [
-    { id: '1001', assunto: 'Falha no acesso ao ERP', categoria: 'Sistemas e Software', descricao: 'Erro 502 ao tentar logar no sistema financeiro.', status: 'Pendente', autor: 'Carlos Silva' }
+    { id: '1001', assunto: 'Falha no acesso ao ERP', categoria: 'Sistemas e Software', descricao: 'Erro 502 ao tentar logar no sistema financeiro.', status: 'Pendente', autor: 'Carlos Cliente' }
 ];
 let conversasChat = JSON.parse(localStorage.getItem('nexus_chats')) || [];
 
@@ -18,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ==========================================
+// NAVEGAÇÃO DE SEÇÕES (Single Page Application)
+// ==========================================
 function mostrarSecao(secaoId) {
     const secoes = ['home', 'status', 'faq', 'abrir-chamado', 'painel-cliente', 'painel-atendente'];
     
@@ -41,6 +55,9 @@ function mostrarSecao(secaoId) {
     }
 }
 
+// ==========================================
+// ACESSIBILIDADE
+// ==========================================
 let altoContrasteAtivo = false;
 function toggleContraste() {
     altoContrasteAtivo = !altoContrasteAtivo;
@@ -61,6 +78,9 @@ function mudarFonte(acao) {
     document.documentElement.style.fontSize = `${nivelFonte}px`;
 }
 
+// ==========================================
+// MODAL DE AUTENTICAÇÃO
+// ==========================================
 function abrirModal(tipo) {
     const modal = document.getElementById('auth-modal');
     if (modal) modal.classList.remove('section-hidden');
@@ -85,6 +105,9 @@ function alternarModalPara(tipo) {
     }
 }
 
+// ==========================================
+// GERENCIAMENTO DE SESSÃO E USUÁRIOS
+// ==========================================
 function fazerCadastro(e) {
     e.preventDefault();
     const nome = document.getElementById('cad-nome').value.trim();
@@ -92,9 +115,20 @@ function fazerCadastro(e) {
     const senha = document.getElementById('cad-senha').value;
     const tipo = document.getElementById('cad-tipo').value;
 
+    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
+    
+    // Verifica se já existe
+    if (listaUsuarios.some(u => u.email === email)) {
+        alert('Este e-mail já está cadastrado.');
+        return;
+    }
+
     const novoUsuario = { nome, email, senha, tipo };
-    localStorage.setItem('nexus_usuario', JSON.stringify(novoUsuario));
+    listaUsuarios.push(novoUsuario);
+    localStorage.setItem('nexus_usuarios_cadastrados', JSON.stringify(listaUsuarios));
+
     usuarioLogado = novoUsuario;
+    localStorage.setItem('nexus_usuario', JSON.stringify(usuarioLogado));
 
     fecharModal();
     atualizarNavbarAuth();
@@ -112,19 +146,24 @@ function fazerCadastro(e) {
 function fazerLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
-    const usuarioSalvo = JSON.parse(localStorage.getItem('nexus_usuario'));
+    const senha = document.getElementById('login-senha').value;
 
-    if (usuarioSalvo && usuarioSalvo.email === email) {
-        usuarioLogado = usuarioSalvo;
+    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
+    const usuarioEncontrado = listaUsuarios.find(u => u.email === email && u.senha === senha);
+
+    if (usuarioEncontrado) {
+        usuarioLogado = usuarioEncontrado;
     } else {
+        // Fallback dinâmico para novos testes rápidos
         const tipoInferido = (email.includes('admin') || email.includes('suporte') || email.includes('atendente')) ? 'atendente' : 'cliente';
         usuarioLogado = { nome: email.split('@')[0], email, tipo: tipoInferido };
-        localStorage.setItem('nexus_usuario', JSON.stringify(usuarioLogado));
     }
+
+    localStorage.setItem('nexus_usuario', JSON.stringify(usuarioLogado));
 
     fecharModal();
     atualizarNavbarAuth();
-    alert(`Login efetuado com sucesso! Perfil: ${usuarioLogado.tipo.toUpperCase()}`);
+    alert(`Login efetuado com sucesso! Bem-vindo(a), ${usuarioLogado.nome} (${usuarioLogado.tipo.toUpperCase()})`);
 
     if (usuarioLogado.tipo === 'atendente') {
         mostrarSecao('painel-atendente');
@@ -161,6 +200,9 @@ function atualizarNavbarAuth() {
     }
 }
 
+// ==========================================
+// CHAMADOS DE SUPORTE
+// ==========================================
 function enviarChamado(e) {
     e.preventDefault();
     if (!usuarioLogado) {
@@ -270,6 +312,9 @@ function atenderChat(idx) {
     carregarPainelAtendente();
 }
 
+// ==========================================
+// CHATBOT E IA (LLAMA 3 / FALLBACK)
+// ==========================================
 function toggleChatbot() {
     const janela = document.getElementById('chatbot-window');
     if (janela) janela.classList.toggle('section-hidden');
@@ -286,7 +331,6 @@ function handleChatKey(e) {
     }
 }
 
-// Fallback local caso o modelo esteja aquecendo
 function gerarRespostaSimulada(texto) {
     const t = texto.toLowerCase();
     if (t.includes('vpn') || t.includes('rede')) {
@@ -298,9 +342,6 @@ function gerarRespostaSimulada(texto) {
     return "Compreendi sua dúvida técnica. Como assistente virtual da Nexus Core, recomendo consultar nossa Base de Conhecimento ou solicitar atendimento humano.";
 }
 
-// ==========================================
-// INTEGRAÇÃO COM LLAMA 3 VIA HUGGING FACE ROUTER
-// ==========================================
 async function enviarMensagemChat() {
     const input = document.getElementById('chat-input');
     if (!input) return;
@@ -328,7 +369,7 @@ async function enviarMensagemChat() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "meta-llama/Meta-Llama-3-8B-Instruct", // Utilizando Llama 3 8B Instruct
+                model: "meta-llama/Meta-Llama-3-8B-Instruct",
                 messages: [
                     { 
                         role: "system", 
@@ -344,13 +385,7 @@ async function enviarMensagemChat() {
         removerMensagemCarregamento();
 
         if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            // Se o modelo estiver carregando (comum no Hugging Face Serverless), avisa e usa o fallback
-            if (errData.error && errData.error.includes("loading")) {
-                adicionarMensagemUI("⏳ O modelo Llama 3 está inicializando nos servidores do Hugging Face. Resposta simulada temporária ativada: " + gerarRespostaSimulada(texto), 'bot');
-                return;
-            }
-            throw new Error(errData.error?.message || 'Erro na API');
+            throw new Error('Falha na API');
         }
 
         const data = await response.json();
@@ -359,7 +394,6 @@ async function enviarMensagemChat() {
 
     } catch (error) {
         removerMensagemCarregamento();
-        // Ativa o fallback automático caso dê qualquer falha de rede/modelo
         const respostaFallback = gerarRespostaSimulada(texto);
         adicionarMensagemUI(respostaFallback, 'bot');
     }
