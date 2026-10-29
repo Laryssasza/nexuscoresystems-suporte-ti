@@ -1,13 +1,12 @@
-// ==========================================
-// ESTADO GLOBAL DA APLICAÇÃO
-// ==========================================
+
+const HF_API_KEY = "hf_jZSjOMnjkqQPfkqAcAEoqaoEdCytLrKlC";
+
 let usuarioLogado = JSON.parse(localStorage.getItem('nexus_usuario')) || null;
 let chamados = JSON.parse(localStorage.getItem('nexus_chamados')) || [
     { id: '1001', assunto: 'Falha no acesso ao ERP', categoria: 'Sistemas e Software', descricao: 'Erro 502 ao tentar logar no sistema financeiro.', status: 'Pendente', autor: 'Carlos Silva' }
 ];
 let conversasChat = JSON.parse(localStorage.getItem('nexus_chats')) || [];
 
-// Inicialização ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
     atualizarNavbarAuth();
     if (usuarioLogado) {
@@ -19,9 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ==========================================
-// NAVEGAÇÃO DE SEÇÕES (Single Page Application)
-// ==========================================
 function mostrarSecao(secaoId) {
     const secoes = ['home', 'status', 'faq', 'abrir-chamado', 'painel-cliente', 'painel-atendente'];
     
@@ -32,7 +28,6 @@ function mostrarSecao(secaoId) {
         }
     });
 
-    // Se cliente tentar acessar painel exclusivo ou atendente tentar abrir chamado comum
     if (secaoId === 'abrir-chamado' && usuarioLogado && usuarioLogado.tipo === 'atendente') {
         alert('Atendentes gerenciam chamados diretamente no painel de suporte.');
         mostrarSecao('painel-atendente');
@@ -46,9 +41,6 @@ function mostrarSecao(secaoId) {
     }
 }
 
-// ==========================================
-// ACESSIBILIDADE (Alto Contraste e Fontes)
-// ==========================================
 let altoContrasteAtivo = false;
 function toggleContraste() {
     altoContrasteAtivo = !altoContrasteAtivo;
@@ -69,9 +61,6 @@ function mudarFonte(acao) {
     document.documentElement.style.fontSize = `${nivelFonte}px`;
 }
 
-// ==========================================
-// MODAL DE AUTENTICAÇÃO (Login / Cadastro)
-// ==========================================
 function abrirModal(tipo) {
     const modal = document.getElementById('auth-modal');
     if (modal) modal.classList.remove('section-hidden');
@@ -96,9 +85,6 @@ function alternarModalPara(tipo) {
     }
 }
 
-// ==========================================
-// GERENCIAMENTO DE USUÁRIOS E SESSÃO
-// ==========================================
 function fazerCadastro(e) {
     e.preventDefault();
     const nome = document.getElementById('cad-nome').value.trim();
@@ -131,7 +117,6 @@ function fazerLogin(e) {
     if (usuarioSalvo && usuarioSalvo.email === email) {
         usuarioLogado = usuarioSalvo;
     } else {
-        // Inferência automática para testes rápidos se o email contiver termos de suporte
         const tipoInferido = (email.includes('admin') || email.includes('suporte') || email.includes('atendente')) ? 'atendente' : 'cliente';
         usuarioLogado = { nome: email.split('@')[0], email, tipo: tipoInferido };
         localStorage.setItem('nexus_usuario', JSON.stringify(usuarioLogado));
@@ -176,9 +161,6 @@ function atualizarNavbarAuth() {
     }
 }
 
-// ==========================================
-// CHAMADOS DE SUPORTE
-// ==========================================
 function enviarChamado(e) {
     e.preventDefault();
     if (!usuarioLogado) {
@@ -288,9 +270,6 @@ function atenderChat(idx) {
     carregarPainelAtendente();
 }
 
-// ==========================================
-// CHATBOT E TRANSBORDO PARA ATENDENTE
-// ==========================================
 function toggleChatbot() {
     const janela = document.getElementById('chatbot-window');
     if (janela) janela.classList.toggle('section-hidden');
@@ -307,7 +286,22 @@ function handleChatKey(e) {
     }
 }
 
-function enviarMensagemChat() {
+// Fallback local caso o modelo esteja aquecendo
+function gerarRespostaSimulada(texto) {
+    const t = texto.toLowerCase();
+    if (t.includes('vpn') || t.includes('rede')) {
+        return "Para configurar a VPN da Nexus Core, acesse a Base de Conhecimento em nosso menu superior e siga o guia de importação do arquivo `.ovpn`.";
+    }
+    if (t.includes('senha') || t.includes('login') || t.includes('acesso')) {
+        return "Para redefinir sua senha corporativa, utilize a opção de recuperação na tela de login ou abra um chamado na categoria Acessos.";
+    }
+    return "Compreendi sua dúvida técnica. Como assistente virtual da Nexus Core, recomendo consultar nossa Base de Conhecimento ou solicitar atendimento humano.";
+}
+
+// ==========================================
+// INTEGRAÇÃO COM LLAMA 3 VIA HUGGING FACE ROUTER
+// ==========================================
+async function enviarMensagemChat() {
     const input = document.getElementById('chat-input');
     if (!input) return;
 
@@ -317,29 +311,75 @@ function enviarMensagemChat() {
     adicionarMensagemUI(texto, 'user');
     input.value = '';
 
-    // Simulação de resposta corporativa da IA (Pronto para conectar na OpenAI API futuramente)
-    setTimeout(() => {
-        let respostaIA = "Entendi sua dúvida. Como assistente virtual da Nexus Core, recomendo consultar nossa Base de Conhecimento ou abrir um chamado de suporte.";
-        const termo = texto.toLowerCase();
-        
-        if (termo.includes('vpn') || termo.includes('rede')) {
-            respostaIA = "Para configurar a VPN, acesse a Base de Conhecimento em nosso menu superior e siga o guia de importação do arquivo `.ovpn`.";
-        } else if (termo.includes('senha') || termo.includes('login') || termo.includes('acesso')) {
-            respostaIA = "Você pode redefinir suas credenciais na tela de login ou solicitar auxílio direto aos nossos analistas.";
+    if (!HF_API_KEY || HF_API_KEY === "SUA_CHAVE_HUGGINGFACE_AQUI") {
+        setTimeout(() => {
+            adicionarMensagemUI(gerarRespostaSimulada(texto), 'bot');
+        }, 800);
+        return;
+    }
+
+    adicionarMensagemUI("Pensando...", 'bot-loading');
+
+    try {
+        const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${HF_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "meta-llama/Meta-Llama-3-8B-Instruct", // Utilizando Llama 3 8B Instruct
+                messages: [
+                    { 
+                        role: "system", 
+                        content: "Você é o Nexus Copilot AI, um assistente virtual especialista em suporte de TI e sistemas da Nexus Core Systems. Seja objetivo, prestativo e ajude colaboradores com problemas de VPN, hardware, softwares e senhas." 
+                    },
+                    { role: "user", content: texto }
+                ],
+                temperature: 0.7,
+                max_tokens: 300
+            })
+        });
+
+        removerMensagemCarregamento();
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            // Se o modelo estiver carregando (comum no Hugging Face Serverless), avisa e usa o fallback
+            if (errData.error && errData.error.includes("loading")) {
+                adicionarMensagemUI("⏳ O modelo Llama 3 está inicializando nos servidores do Hugging Face. Resposta simulada temporária ativada: " + gerarRespostaSimulada(texto), 'bot');
+                return;
+            }
+            throw new Error(errData.error?.message || 'Erro na API');
         }
 
+        const data = await response.json();
+        const respostaIA = data.choices[0].message.content;
         adicionarMensagemUI(respostaIA, 'bot');
-    }, 800);
+
+    } catch (error) {
+        removerMensagemCarregamento();
+        // Ativa o fallback automático caso dê qualquer falha de rede/modelo
+        const respostaFallback = gerarRespostaSimulada(texto);
+        adicionarMensagemUI(respostaFallback, 'bot');
+    }
 }
 
 function adicionarMensagemUI(texto, remetente) {
-    const container = document.getElementById('chat-messages');
+    const container = document.getElementById('chatbot-messages');
     if (!container) return;
 
     if (remetente === 'user') {
         container.innerHTML += `
             <div class="chat-msg-row user">
                 <div class="chat-bubble user">${texto}</div>
+            </div>
+        `;
+    } else if (remetente === 'bot-loading') {
+        container.innerHTML += `
+            <div id="msg-loading" class="chat-msg-row bot">
+                <div class="chat-avatar-bot"><i class="fa-solid fa-robot"></i></div>
+                <div class="chat-bubble bot animate-pulse">Pensando...</div>
             </div>
         `;
     } else {
@@ -351,6 +391,11 @@ function adicionarMensagemUI(texto, remetente) {
         `;
     }
     container.scrollTop = container.scrollHeight;
+}
+
+function removerMensagemCarregamento() {
+    const loadingEl = document.getElementById('msg-loading');
+    if (loadingEl) loadingEl.remove();
 }
 
 function solicitarAtendimentoHumano() {

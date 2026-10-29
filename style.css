@@ -15,7 +15,6 @@ html {
     outline-offset: 2px;
 }
 
-/* Cores e Fundos Globais */
 .nexus-body {
     background-color: #0f172a;
     color: #f1f5f9;
@@ -31,7 +30,6 @@ html {
     filter: contrast(125%);
 }
 
-/* Utilitários Flexbox e Layout */
 .container {
     max-width: 1280px;
     width: 100%;
@@ -83,9 +81,6 @@ html {
     margin-top: 0.5rem;
 }
 
-/* ==========================================
-   COMPONENTES: TOPO, HEADER E FOOTER
-   ================================---------- */
 .top-bar {
     background-color: #020617;
     border-bottom: 1px solid #1e293b;
@@ -220,9 +215,6 @@ html {
     color: #64748b;
 }
 
-/* ==========================================
-   BOTÕES E ELEMENTOS DE INTERAÇÃO
-   ================================---------- */
 .btn-primary {
     background-color: #0284c7;
     color: #ffffff;
@@ -282,9 +274,6 @@ html {
     color: #7dd3fc;
 }
 
-/* ==========================================
-   HOME E HERO SECTION
-   ================================---------- */
 .section-home {
     display: flex;
     flex-direction: column;
@@ -434,9 +423,6 @@ html {
     line-height: 1.5;
 }
 
-/* ==========================================
-   SEÇÕES: STATUS, FAQ E CHAMADOS
-   ================================---------- */
 .section-title {
     font-size: 1.5rem;
     font-weight: bold;
@@ -570,9 +556,6 @@ html {
     box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
 }
 
-/* ==========================================
-   PAINEL DE ATENDENTE
-   ================================---------- */
 .atendente-banner {
     background: linear-gradient(to right, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 1));
     border: 1px solid rgba(59, 130, 246, 0.3);
@@ -654,9 +637,6 @@ html {
     padding-right: 0.5rem;
 }
 
-/* ==========================================
-   WIDGET DO CHATBOT DE IA
-   ================================---------- */
 .chatbot-widget {
     position: fixed;
     bottom: 1.5rem;
@@ -846,9 +826,6 @@ html {
     background-color: #0ea5e9;
 }
 
-/* ==========================================
-   MODAL DE AUTENTICAÇÃO (LOGIN / CADASTRO)
-   ================================---------- */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -922,6 +899,5 @@ html {
     color: #94a3b8;
 }
 
-/* Ícones auxiliares */
 .icon-primary { color: #0ea5e9; }
 .icon-emerald { color: #34d399; }
