@@ -138,7 +138,7 @@
                         <span>Esqueci minha senha de acesso ao sistema. O que fazer?</span>
                         <i class="fa-solid fa-chevron-down"></i>
                     </summary>
-                    <p class="faq-text">Na tela de login, clique em "Esqueci minha senha" ou interaja com nosso Chatbot IA solicitando redefinição imediata de credenciais.</p>
+                    <p class="faq-text">Na tela de login, clique em "Esqueci a senha?" ou interaja com nosso Chatbot IA solicitando redefinição imediata de credenciais.</p>
                 </details>
             </div>
         </section>
@@ -223,7 +223,7 @@
                     <div class="chatbot-avatar"><i class="fa-solid fa-brain"></i></div>
                     <div>
                         <h4 class="chatbot-title">Nexus Copilot AI</h4>
-                        <span class="chatbot-status"><span class="status-dot emerald animate-pulse"></span> Online (OpenAI API Active)</span>
+                        <span class="chatbot-status"><span class="status-dot emerald animate-pulse"></span> Online (Llama 3 Active)</span>
                     </div>
                 </div>
                 <button type="button" onclick="toggleChatbot()" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
@@ -233,7 +233,7 @@
                 <div class="chat-msg-row bot">
                     <div class="chat-avatar-bot"><i class="fa-solid fa-robot"></i></div>
                     <div class="chat-bubble bot">
-                        Olá! Sou o assistente virtual da Nexus Core Systems. Como posso ajudar com seu problema de TI hoje? Caso precise, você também pode solicitar atendimento humano a qualquer momento.
+                        Olá! Sou o assistente virtual da Nexus Core Systems. Como posso ajudar com seu problema de TI hoje?
                     </div>
                 </div>
             </div>
@@ -250,11 +250,12 @@
         </div>
     </div>
 
-    <!-- MODAL DE LOGIN / CADASTRO -->
+    <!-- MODAL DE AUTENTICAÇÃO (LOGIN / CADASTRO / RECUPERAÇÃO) -->
     <div id="auth-modal" class="modal-overlay section-hidden">
         <div class="modal-box">
             <button type="button" onclick="fecharModal()" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
             
+            <!-- TELA DE LOGIN -->
             <div id="modal-content-login">
                 <h3 class="modal-title">Entrar na Nexus Core</h3>
                 <p class="modal-subtitle">Acesse sua conta de cliente ou de atendente de suporte.</p>
@@ -264,7 +265,10 @@
                         <input type="email" id="login-email" required class="modal-input" placeholder="seu.email@empresa.com">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Senha</label>
+                        <div class="flex-between">
+                            <label class="form-label">Senha</label>
+                            <button type="button" onclick="alternarModalPara('recuperar')" class="btn-link text-xs">Esqueceu a senha?</button>
+                        </div>
                         <input type="password" id="login-senha" required class="modal-input" placeholder="••••••••">
                     </div>
                     <button type="submit" class="btn-primary w-full mt-2">Entrar</button>
@@ -274,6 +278,7 @@
                 </div>
             </div>
 
+            <!-- TELA DE CADASTRO -->
             <div id="modal-content-cadastro" class="section-hidden">
                 <h3 class="modal-title">Criar Conta</h3>
                 <p class="modal-subtitle">Cadastre-se como cliente ou selecione perfil de atendente.</p>
@@ -303,6 +308,40 @@
                     Já tem conta? <button type="button" onclick="alternarModalPara('login')" class="btn-link">Entrar</button>
                 </div>
             </div>
+
+            <!-- TELA DE RECUPERAÇÃO DE SENHA -->
+            <div id="modal-content-recuperar" class="section-hidden">
+                <h3 class="modal-title">Recuperar Senha</h3>
+                <p class="modal-subtitle">Informe seu e-mail para receber o código de validação fictício.</p>
+                
+                <form id="form-recup-etapa1" onsubmit="enviarCodigoRecuperacao(event)" class="space-y">
+                    <div class="form-group">
+                        <label class="form-label">E-mail Cadastrado</label>
+                        <input type="email" id="recup-email" required class="modal-input" placeholder="seu.email@empresa.com">
+                    </div>
+                    <button type="submit" class="btn-primary w-full mt-2">Enviar Código Fictício</button>
+                </form>
+
+                <form id="form-recup-etapa2" onsubmit="redefinirSenha(event)" class="space-y section-hidden">
+                    <div class="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-300 mb-2">
+                        <i class="fa-solid fa-circle-info text-sky-400"></i> Código de teste pré-definido pelo sistema: <strong class="text-sky-400">7788</strong>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Código de 4 Dígitos</label>
+                        <input type="text" id="recup-codigo" required maxlength="4" class="modal-input text-center tracking-widest text-lg" placeholder="7788">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nova Senha</label>
+                        <input type="password" id="recup-nova-senha" required class="modal-input" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary w-full mt-2">Redefinir Senha</button>
+                </form>
+
+                <div class="modal-footer-text">
+                    Lembrou a senha? <button type="button" onclick="alternarModalPara('login')" class="btn-link">Entrar</button>
+                </div>
+            </div>
+
         </div>
     </div>
 

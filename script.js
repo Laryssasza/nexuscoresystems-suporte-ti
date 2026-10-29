@@ -15,8 +15,6 @@ let chamados = JSON.parse(localStorage.getItem('nexus_chamados')) || [
     { id: '1001', assunto: 'Falha no acesso ao ERP', categoria: 'Sistemas e Software', descricao: 'Erro 502 ao tentar logar no sistema financeiro.', status: 'Pendente', autor: 'Carlos Cliente' }
 ];
 let conversasChat = JSON.parse(localStorage.getItem('nexus_chats')) || [];
-
-// Variável para controlar se o usuário já enviou a primeira mensagem
 let primeiraMensagemEnviada = false;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -80,7 +78,7 @@ function mudarFonte(acao) {
 }
 
 // ==========================================
-// MODAL DE AUTENTICAÇÃO
+// MODAL DE AUTENTICAÇÃO E RECUPERAÇÃO
 // ==========================================
 function abrirModal(tipo) {
     const modal = document.getElementById('auth-modal');
@@ -96,14 +94,65 @@ function fecharModal() {
 function alternarModalPara(tipo) {
     const contentLogin = document.getElementById('modal-content-login');
     const contentCadastro = document.getElementById('modal-content-cadastro');
+    const contentRecuperar = document.getElementById('modal-content-recuperar');
+
+    if (contentLogin) contentLogin.classList.add('section-hidden');
+    if (contentCadastro) contentCadastro.classList.add('section-hidden');
+    if (contentRecuperar) contentRecuperar.classList.add('section-hidden');
 
     if (tipo === 'login') {
         if (contentLogin) contentLogin.classList.remove('section-hidden');
-        if (contentCadastro) contentCadastro.classList.add('section-hidden');
-    } else {
-        if (contentLogin) contentLogin.classList.add('section-hidden');
+    } else if (tipo === 'cadastro') {
         if (contentCadastro) contentCadastro.classList.remove('section-hidden');
+    } else if (tipo === 'recuperar') {
+        if (contentRecuperar) contentRecuperar.classList.remove('section-hidden');
+        document.getElementById('form-recup-etapa1').classList.remove('section-hidden');
+        document.getElementById('form-recup-etapa2').classList.add('section-hidden');
     }
+}
+
+const CODIGO_VALIDACAO_PREDEFINIDO = "7788";
+let emailParaRecuperacao = "";
+
+function enviarCodigoRecuperacao(e) {
+    e.preventDefault();
+    const emailInput = document.getElementById('recup-email').value.trim();
+    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
+
+    const usuarioExiste = listaUsuarios.find(u => u.email === emailInput);
+    if (!usuarioExiste) {
+        alert('Este e-mail não foi encontrado na base corporativa.');
+        return;
+    }
+
+    emailParaRecuperacao = emailInput;
+    alert(`✉️ [SIMULAÇÃO DE E-MAIL]\nO sistema enviou um código de verificação para: ${emailInput}\n\nCódigo pré-definido para teste: 7788`);
+
+    document.getElementById('form-recup-etapa1').classList.add('section-hidden');
+    document.getElementById('form-recup-etapa2').classList.remove('section-hidden');
+}
+
+function redefinirSenha(e) {
+    e.preventDefault();
+    const codigoDigitado = document.getElementById('recup-codigo').value.trim();
+    const novaSenha = document.getElementById('recup-nova-senha').value;
+
+    if (codigoDigitado !== CODIGO_VALIDACAO_PREDEFINIDO) {
+        alert('❌ Código de verificação inválido! Utilize o código pré-definido: 7788');
+        return;
+    }
+
+    let listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
+    listaUsuarios = listaUsuarios.map(u => {
+        if (u.email === emailParaRecuperacao) {
+            u.senha = novaSenha;
+        }
+        return u;
+    });
+
+    localStorage.setItem('nexus_usuarios_cadastrados', JSON.stringify(listaUsuarios));
+    alert('✅ Senha redefinida com sucesso! Faça login com sua nova senha.');
+    alternarModalPara('login');
 }
 
 // ==========================================
@@ -363,7 +412,6 @@ async function enviarMensagemChat() {
     adicionarMensagemUI(texto, 'user');
     input.value = '';
 
-    // Marca que o usuário já enviou a primeira mensagem
     const eraPrimeiraMensagem = !primeiraMensagemEnviada;
     primeiraMensagemEnviada = true;
 
@@ -371,8 +419,6 @@ async function enviarMensagemChat() {
         setTimeout(() => {
             const resp = gerarRespostaSimulada(texto);
             adicionarMensagemUI(resp, 'bot');
-            
-            // Se foi a primeira mensagem, exibe os tópicos sugeridos logo após
             if (eraPrimeiraMensagem) {
                 adicionarTopicosSugestoesUI();
             }
