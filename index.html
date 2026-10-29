@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Core Systems | Suporte de TI Inteligente</title>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Folha de Estilos Externa -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="nexus-body">
+
+    <!-- BARRA DE ACESSIBILIDADE TOPO -->
+    <div class="top-bar">
+        <div class="container top-bar-content">
+            <span class="top-bar-title"><i class="fa-solid fa-shield-halved icon-primary"></i> Nexus Core Systems - Central de Suporte</span>
+            <div class="accessibility-controls">
+                <button type="button" onclick="toggleContraste()" class="btn-accessibility"><i class="fa-solid fa-circle-half-stroke"></i> Alto Contraste</button>
+                <button type="button" onclick="mudarFonte('aumentar')" class="btn-accessibility" title="Aumentar Fonte">A+</button>
+                <button type="button" onclick="mudarFonte('diminuir')" class="btn-accessibility" title="Diminuir Fonte">A-</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO / NAVBAR -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="brand" onclick="mostrarSecao('home')">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <div>
+                    <span class="brand-title">NEXUS <span class="text-highlight">CORE</span></span>
+                    <span class="brand-subtitle">IT Support Systems</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button type="button" onclick="mostrarSecao('home')" class="nav-link">Início</button>
+                <button type="button" onclick="mostrarSecao('status')" class="nav-link">Status dos Sistemas</button>
+                <button type="button" onclick="mostrarSecao('faq')" class="nav-link">Base de Conhecimento</button>
+                <button type="button" onclick="mostrarSecao('abrir-chamado')" class="nav-link">Abrir Chamado</button>
+            </nav>
+
+            <div class="auth-buttons" id="auth-nav-buttons">
+                <button type="button" onclick="abrirModal('login')" class="btn-secondary">Entrar</button>
+                <button type="button" onclick="abrirModal('cadastro')" class="btn-primary">Cadastrar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="container main-content">
+
+        <!-- SEÇÃO: INÍCIO / HOME -->
+        <section id="secao-home" class="section-home">
+            <div class="hero-banner">
+                <div class="hero-glow"></div>
+                <div class="hero-text-container">
+                    <span class="badge"><i class="fa-solid fa-bolt icon-primary"></i> Suporte de TI Disponível 24/7</span>
+                    <h1 class="hero-title">
+                        Inteligência e Eficiência para sua <span class="gradient-text">Infraestrutura</span>
+                    </h1>
+                    <p class="hero-description">
+                        Bem-vindo ao portal da Nexus Core Systems. Tire dúvidas instantaneamente com nossa IA corporativa ou abra chamados com nossa equipe especializada.
+                    </p>
+                    <div class="hero-buttons">
+                        <button type="button" onclick="abrirChatbot()" class="btn-primary flex-center"><i class="fa-solid fa-robot"></i><span>Chat Inteligente IA</span></button>
+                        <button type="button" onclick="mostrarSecao('abrir-chamado')" class="btn-outline flex-center"><i class="fa-solid fa-ticket"></i><span>Abrir Chamado</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cards-grid">
+                <div onclick="mostrarSecao('status')" class="card">
+                    <div class="card-icon emerald"><i class="fa-solid fa-server"></i></div>
+                    <h3 class="card-title">Status dos Sistemas</h3>
+                    <p class="card-text">Monitore em tempo real a estabilidade dos servidores, banco de dados e APIs corporativas.</p>
+                </div>
+
+                <div onclick="mostrarSecao('faq')" class="card">
+                    <div class="card-icon purple"><i class="fa-solid fa-book-open"></i></div>
+                    <h3 class="card-title">Base de Conhecimento</h3>
+                    <p class="card-text">Consulte tutoriais, guias de VPN, configuração de e-mail corporativo e resolução de erros comuns.</p>
+                </div>
+
+                <div onclick="abrirChatbot()" class="card">
+                    <div class="card-icon cyan"><i class="fa-solid fa-comments"></i></div>
+                    <h3 class="card-title">Suporte via IA & Humanos</h3>
+                    <p class="card-text">Assistente virtual com IA generativa e opção de transferência imediata para analistas de plantão.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO: STATUS DOS SISTEMAS -->
+        <section id="secao-status" class="section-hidden space-y">
+            <div>
+                <h2 class="section-title">Monitoramento de Sistemas</h2>
+                <p class="section-subtitle">Status atual dos serviços da infraestrutura Nexus Core.</p>
+            </div>
+            <div class="panel-box">
+                <div class="status-item">
+                    <div class="status-left"><span class="status-dot emerald animate-pulse"></span><span class="status-label">Servidor de Autenticação (OAuth/SSO)</span></div>
+                    <span class="badge-status emerald">Operacional</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-left"><span class="status-dot emerald animate-pulse"></span><span class="status-label">Portal do Cliente & Dashboard</span></div>
+                    <span class="badge-status emerald">Operacional</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-left"><span class="status-dot emerald animate-pulse"></span><span class="status-label">IA Assistente Copilot (OpenAI API)</span></div>
+                    <span class="badge-status emerald">Operacional</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-left"><span class="status-dot amber"></span><span class="status-label">Gateway de VPN Corporativa</span></div>
+                    <span class="badge-status amber">Manutenção Programada</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO: BASE DE CONHECIMENTO / FAQ -->
+        <section id="secao-faq" class="section-hidden space-y">
+            <div>
+                <h2 class="section-title">Base de Conhecimento</h2>
+                <p class="section-subtitle">Respostas rápidas para as dúvidas mais frequentes de TI.</p>
+            </div>
+            <div class="space-y">
+                <details class="faq-details">
+                    <summary class="faq-summary">
+                        <span>Como configurar a VPN da empresa no meu notebook pessoal?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </summary>
+                    <p class="faq-text">Baixe o cliente OpenVPN no portal interno, solicite seu arquivo de credenciais `.ovpn` com seu gestor e importe para o software utilizando seu usuário de rede Nexus Core.</p>
+                </details>
+                <details class="faq-details">
+                    <summary class="faq-summary">
+                        <span>Esqueci minha senha de acesso ao sistema. O que fazer?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </summary>
+                    <p class="faq-text">Na tela de login, clique em "Esqueci minha senha" ou interaja com nosso Chatbot IA solicitando redefinição imediata de credenciais.</p>
+                </details>
+            </div>
+        </section>
+
+        <!-- SEÇÃO: ABRIR CHAMADO -->
+        <section id="secao-abrir-chamado" class="section-hidden form-container">
+            <div>
+                <h2 class="section-title">Abrir Novo Chamado</h2>
+                <p class="section-subtitle">Descreva seu problema técnico para nossa equipe de analistas.</p>
+            </div>
+            <form onsubmit="enviarChamado(event)" class="form-box">
+                <div class="form-group">
+                    <label class="form-label">Assunto / Título do Problema</label>
+                    <input type="text" id="chamado-assunto" required class="form-input" placeholder="Ex: Erro ao acessar o sistema financeiro">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoria</label>
+                    <select id="chamado-categoria" class="form-input">
+                        <option value="Redes e VPN">Redes e VPN</option>
+                        <option value="Hardware / Equipamentos">Hardware / Equipamentos</option>
+                        <option value="Sistemas e Software">Sistemas e Software</option>
+                        <option value="Acessos e Senhas">Acessos e Senhas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição Detalhada</label>
+                    <textarea id="chamado-descricao" rows="4" required class="form-input" placeholder="Informe mensagens de erro, passos para reproduzir, etc."></textarea>
+                </div>
+                <button type="submit" class="btn-primary w-full">Enviar Chamado</button>
+            </form>
+        </section>
+
+        <!-- PAINEL DO CLIENTE -->
+        <section id="painel-cliente" class="section-hidden space-y">
+            <div class="flex-between">
+                <div>
+                    <h2 class="section-title">Painel do Cliente</h2>
+                    <p class="section-subtitle">Acompanhe o andamento dos seus chamados de suporte.</p>
+                </div>
+                <button type="button" onclick="mostrarSecao('abrir-chamado')" class="btn-primary text-sm">Novo Chamado</button>
+            </div>
+            <div id="lista-chamados-cliente" class="space-y"></div>
+        </section>
+
+        <!-- PAINEL DO ATENDENTE / SUPORTE -->
+        <section id="painel-atendente" class="section-hidden space-y">
+            <div class="atendente-banner">
+                <div>
+                    <span class="atendente-badge">Painel Exclusivo de Suporte</span>
+                    <h2 class="atendente-title">Fila de Atendimento Humano (Transbordo)</h2>
+                    <p class="atendente-subtitle">Atenda chamados abertos ou clientes que solicitaram suporte humano no chat da IA.</p>
+                </div>
+                <div class="atendente-counter-box">
+                    <span class="atendente-counter-num" id="contador-fila">0</span>
+                    <span class="atendente-counter-text">Na Fila</span>
+                </div>
+            </div>
+
+            <div class="atendente-grid">
+                <div class="panel-box">
+                    <h3 class="panel-heading"><i class="fa-solid fa-ticket icon-primary"></i> Chamados do Sistema</h3>
+                    <div id="lista-chamados-atendente" class="scroll-list"></div>
+                </div>
+                <div class="panel-box">
+                    <h3 class="panel-heading"><i class="fa-solid fa-headset icon-emerald"></i> Conversas de Chat (Transbordo)</h3>
+                    <div id="lista-chats-atendente" class="scroll-list"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- WIDGET FLUTUANTE DO CHATBOT DE IA -->
+    <div id="chatbot-widget" class="chatbot-widget">
+        <button type="button" onclick="toggleChatbot()" id="chatbot-toggle-btn" class="chatbot-fab" aria-label="Abrir Chatbot">
+            <i class="fa-solid fa-robot"></i>
+        </button>
+
+        <div id="chatbot-window" class="chatbot-window section-hidden">
+            <div class="chatbot-header">
+                <div class="flex-center-gap">
+                    <div class="chatbot-avatar"><i class="fa-solid fa-brain"></i></div>
+                    <div>
+                        <h4 class="chatbot-title">Nexus Copilot AI</h4>
+                        <span class="chatbot-status"><span class="status-dot emerald animate-pulse"></span> Online (OpenAI API Ready)</span>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleChatbot()" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div id="chat-messages" class="chatbot-messages">
+                <div class="chat-msg-row bot">
+                    <div class="chat-avatar-bot"><i class="fa-solid fa-robot"></i></div>
+                    <div class="chat-bubble bot">
+                        Olá! Sou o assistente virtual da Nexus Core Systems. Como posso ajudar com seu problema de TI hoje? Caso precise, você também pode solicitar atendimento humano a qualquer momento.
+                    </div>
+                </div>
+            </div>
+
+            <div class="chatbot-footer-action">
+                <span class="text-xs text-slate-400">Dificuldades com a IA?</span>
+                <button type="button" onclick="solicitarAtendimentoHumano()" class="btn-link">Falar com Atendente Humano</button>
+            </div>
+
+            <div class="chatbot-input-area">
+                <input type="text" id="chat-input" onkeypress="handleChatKey(event)" placeholder="Digite sua dúvida..." class="chatbot-input">
+                <button type="button" onclick="enviarMensagemChat()" class="btn-send"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN / CADASTRO -->
+    <div id="auth-modal" class="modal-overlay section-hidden">
+        <div class="modal-box">
+            <button type="button" onclick="fecharModal()" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div id="modal-content-login">
+                <h3 class="modal-title">Entrar na Nexus Core</h3>
+                <p class="modal-subtitle">Acesse sua conta de cliente ou de atendente de suporte.</p>
+                <form onsubmit="fazerLogin(event)" class="space-y">
+                    <div class="form-group">
+                        <label class="form-label">E-mail Corporativo</label>
+                        <input type="email" id="login-email" required class="modal-input" placeholder="seu.email@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Senha</label>
+                        <input type="password" id="login-senha" required class="modal-input" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary w-full mt-2">Entrar</button>
+                </form>
+                <div class="modal-footer-text">
+                    Não tem conta? <button type="button" onclick="alternarModalPara('cadastro')" class="btn-link">Cadastre-se</button>
+                </div>
+            </div>
+
+            <div id="modal-content-cadastro" class="section-hidden">
+                <h3 class="modal-title">Criar Conta</h3>
+                <p class="modal-subtitle">Cadastre-se como cliente ou selecione perfil de atendente.</p>
+                <form onsubmit="fazerCadastro(event)" class="space-y">
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" id="cad-nome" required class="modal-input" placeholder="Seu Nome">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">E-mail Corporativo</label>
+                        <input type="email" id="cad-email" required class="modal-input" placeholder="seu.email@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Senha</label>
+                        <input type="password" id="cad-senha" required class="modal-input" placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Perfil</label>
+                        <select id="cad-tipo" class="modal-input">
+                            <option value="cliente">Cliente / Colaborador</option>
+                            <option value="atendente">Atendente de Suporte / TI</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary w-full mt-2">Cadastrar</button>
+                </form>
+                <div class="modal-footer-text">
+                    Já tem conta? <button type="button" onclick="alternarModalPara('login')" class="btn-link">Entrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <footer class="footer">
+        <div class="container space-y">
+            <p>&copy; 2026 Nexus Core Systems. Todos os direitos reservados.</p>
+            <p class="footer-desc">Desenvolvido com foco em IHC, Acessibilidade WCAG e Integração com IA Generativa.</p>
+        </div>
+    </footer>
+
+    <!-- SCRIPT SEPARADO -->
+    <script src="script.js"></script>
+</body>
+</html>
