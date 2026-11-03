@@ -20,10 +20,12 @@ let chamados = JSON.parse(localStorage.getItem('nexus_chamados')) || [
     { id: '1001', assunto: 'Falha no acesso ao ERP', categoria: 'Sistemas e Software', descricao: 'Erro 502 ao tentar logar no sistema financeiro.', status: 'Pendente', autor: 'Carlos Cliente' }
 ];
 let conversasChat = JSON.parse(localStorage.getItem('nexus_chats')) || [];
-let primeiraMensagemEnviada = false;
+let historicoChatSessao = JSON.parse(localStorage.getItem('nexus_chat_historico')) || [];
+let primeiraMensagemEnviada = historicoChatSessao.length > 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     atualizarNavbarAuth();
+    carregarHistoricoChatUI();
     if (usuarioLogado) {
         if (usuarioLogado.tipo === 'atendente') {
             carregarPainelAtendente();
@@ -34,11 +36,73 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
+// SISTEMA DE NOTIFICAÇÕES TOAST (UX MODERNA)
+// ==========================================
+function mostrarToast(mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    
+    let icone = 'fa-circle-check';
+    if (tipo === 'error') icone = 'fa-circle-exclamation';
+    if (tipo === 'info') icone = 'fa-circle-info';
+
+    toast.innerHTML = `
+        <i class="fa-solid ${icone} text-lg"></i>
+        <span>${mensagem}</span>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
+
+// ==========================================
 // VALIDADOR DE E-MAIL PADRÃO
 // ==========================================
 function validarEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
+}
+
+// ==========================================
+// AVALIADOR DE FORÇA DE SENHA (VISUAL)
+// ==========================================
+function avaliarForcaSenha(senha) {
+    const barra = document.getElementById('password-strength-bar');
+    const texto = document.getElementById('password-strength-text');
+    if (!barra || !texto) return;
+
+    if (!senha) {
+        barra.style.width = '0%';
+        barra.style.backgroundColor = 'transparent';
+        texto.innerText = 'Força da senha: Digite uma senha';
+        return;
+    }
+
+    let forca = 0;
+    if (senha.length >= 6) forca += 1;
+    if (senha.length >= 10) forca += 1;
+    if (/[A-Z]/.test(senha) && /[0-9]/.test(senha)) forca += 1;
+    if (/[^A-Za-z0-9]/.test(senha)) forca += 1;
+
+    if (forca <= 1) {
+        barra.style.width = '33%';
+        barra.style.backgroundColor = '#ef4444'; // Vermelho (Fraca)
+        texto.innerText = 'Força da senha: Fraca';
+    } else if (forca === 2 || forca === 3) {
+        barra.style.width = '66%';
+        barra.style.backgroundColor = '#f59e0b'; // Amarelo (Média)
+        texto.innerText = 'Força da senha: Média';
+    } else {
+        barra.style.width = '100%';
+        barra.style.backgroundColor = '#10b981'; // Verde (Forte)
+        texto.innerText = 'Força da senha: Forte';
+    }
 }
 
 // ==========================================
@@ -55,7 +119,7 @@ function mostrarSecao(secaoId) {
     });
 
     if (secaoId === 'abrir-chamado' && usuarioLogado && usuarioLogado.tipo === 'atendente') {
-        alert('Atendentes gerenciam chamados diretamente no painel de suporte.');
+        mostrarToast('Atendentes gerenciam chamados diretamente no painel de suporte.', 'info');
         mostrarSecao('painel-atendente');
         return;
     }
@@ -132,19 +196,19 @@ function enviarCodigoRecuperacao(e) {
     const emailInput = document.getElementById('recup-email').value.trim();
 
     if (!validarEmail(emailInput)) {
-        alert('❌ Por favor, informe um endereço de e-mail válido.');
+        mostrarToast('Por favor, informe um endereço de e-mail válido.', 'error');
         return;
     }
 
     const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
     const usuarioExiste = listaUsuarios.find(u => u.email === emailInput);
     if (!usuarioExiste) {
-        alert('❌ Este e-mail não possui cadastro no sistema.');
+        mostrarToast('Este e-mail não possui cadastro no sistema.', 'error');
         return;
     }
 
     emailParaRecuperacao = emailInput;
-    alert(`✉️ [SIMULAÇÃO DE E-MAIL]\nO sistema enviou um código de verificação para: ${emailInput}\n\nCódigo pré-definido para teste: 7788`);
+    mostrarToast(`Código de verificação enviado para ${emailInput}. Teste: 7788`, 'info');
 
     document.getElementById('form-recup-etapa1').classList.add('section-hidden');
     document.getElementById('form-recup-etapa2').classList.remove('section-hidden');
@@ -156,7 +220,7 @@ function redefinirSenha(e) {
     const novaSenha = document.getElementById('recup-nova-senha').value;
 
     if (codigoDigitado !== CODIGO_VALIDACAO_PREDEFINIDO) {
-        alert('❌ Código de verificação inválido! Utilize o código pré-definido: 7788');
+        mostrarToast('Código de verificação inválido! Utilize o código: 7788', 'error');
         return;
     }
 
@@ -164,9 +228,8 @@ function redefinirSenha(e) {
     const usuarioAlvo = listaUsuarios.find(u => u.email === emailParaRecuperacao);
 
     if (usuarioAlvo) {
-        // Validação: Impede que o usuário mude para a mesma senha atual
         if (usuarioAlvo.senha === novaSenha) {
-            alert('❌ A nova senha não pode ser idêntica à sua senha atual. Escolha uma senha diferente.');
+            mostrarToast('A nova senha não pode ser idêntica à sua senha atual.', 'error');
             return;
         }
     }
@@ -179,7 +242,7 @@ function redefinirSenha(e) {
     });
 
     localStorage.setItem('nexus_usuarios_cadastrados', JSON.stringify(listaUsuarios));
-    alert('✅ Senha redefinida com sucesso! Faça login com sua nova senha.');
+    mostrarToast('Senha redefinida com sucesso! Faça login.', 'success');
     alternarModalPara('login');
 }
 
@@ -194,14 +257,14 @@ function fazerCadastro(e) {
     const tipo = document.getElementById('cad-tipo').value;
 
     if (!validarEmail(email)) {
-        alert('❌ O e-mail informado não é válido. Verifique o formato (ex: nome@dominio.com).');
+        mostrarToast('O e-mail informado não é válido.', 'error');
         return;
     }
 
     const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
     
     if (listaUsuarios.some(u => u.email === email)) {
-        alert('❌ Este e-mail já está cadastrado no sistema. Tente fazer login.');
+        mostrarToast('Este e-mail já está cadastrado no sistema.', 'error');
         return;
     }
 
@@ -214,7 +277,7 @@ function fazerCadastro(e) {
 
     fecharModal();
     atualizarNavbarAuth();
-    alert(`✅ Cadastro realizado com sucesso! Bem-vindo(a), ${nome}`);
+    mostrarToast(`Cadastro realizado com sucesso! Bem-vindo(a), ${nome}`, 'success');
 
     if (tipo === 'atendente') {
         mostrarSecao('painel-atendente');
@@ -231,23 +294,21 @@ function fazerLogin(e) {
     const senha = document.getElementById('login-senha').value;
 
     if (!validarEmail(email)) {
-        alert('❌ Insira um formato de e-mail válido.');
+        mostrarToast('Insira um formato de e-mail válido.', 'error');
         return;
     }
 
     const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
     
-    // Verifica se o usuário existe na base
     const usuarioCadastrado = listaUsuarios.find(u => u.email === email);
     if (!usuarioCadastrado) {
-        alert('❌ Este e-mail não possui uma conta registrada. Por favor, cadastre-se primeiro.');
+        mostrarToast('Este e-mail não possui conta registrada.', 'error');
         alternarModalPara('cadastro');
         return;
     }
 
-    // Verifica se a senha confere
     if (usuarioCadastrado.senha !== senha) {
-        alert('❌ Senha incorreta. Tente novamente ou utilize a recuperação de senha.');
+        mostrarToast('Senha incorreta. Tente novamente.', 'error');
         return;
     }
 
@@ -256,7 +317,7 @@ function fazerLogin(e) {
 
     fecharModal();
     atualizarNavbarAuth();
-    alert(`✅ Login efetuado com sucesso! Bem-vindo(a), ${usuarioLogado.nome} (${usuarioLogado.tipo.toUpperCase()})`);
+    mostrarToast(`Login efetuado com sucesso! Bem-vindo(a), ${usuarioLogado.nome}`, 'success');
 
     if (usuarioLogado.tipo === 'atendente') {
         mostrarSecao('painel-atendente');
@@ -272,7 +333,7 @@ function fazerLogout() {
     usuarioLogado = null;
     atualizarNavbarAuth();
     mostrarSecao('home');
-    alert('Sessão encerrada com sucesso.');
+    mostrarToast('Sessão encerrada com sucesso.', 'info');
 }
 
 function atualizarNavbarAuth() {
@@ -294,12 +355,12 @@ function atualizarNavbarAuth() {
 }
 
 // ==========================================
-// CHAMADOS DE SUPORTE
+// CHAMADOS DE SUPORTE (COM FILTRAGEM POR USUÁRIO)
 // ==========================================
 function enviarChamado(e) {
     e.preventDefault();
     if (!usuarioLogado) {
-        alert('Você precisa estar logado para abrir um chamado.');
+        mostrarToast('Você precisa estar logado para abrir um chamado.', 'error');
         abrirModal('login');
         return;
     }
@@ -314,12 +375,13 @@ function enviarChamado(e) {
         categoria,
         descricao,
         status: 'Pendente',
-        autor: usuarioLogado.nome
+        autor: usuarioLogado.nome,
+        emailAutor: usuarioLogado.email
     };
 
     chamados.unshift(novoChamado);
     localStorage.setItem('nexus_chamados', JSON.stringify(chamados));
-    alert('Chamado aberto com sucesso!');
+    mostrarToast('Chamado aberto com sucesso!', 'success');
 
     document.getElementById('chamado-assunto').value = '';
     document.getElementById('chamado-descricao').value = '';
@@ -337,10 +399,11 @@ function carregarPainelCliente() {
     const container = document.getElementById('lista-chamados-cliente');
     if (!container) return;
 
-    const meusChamados = chamados.filter(c => !usuarioLogado || c.autor === usuarioLogado.nome);
+    // Filtra para exibir apenas os chamados abertos pelo usuário logado atual
+    const meusChamados = chamados.filter(c => usuarioLogado && (c.emailAutor === usuarioLogado.email || c.autor === usuarioLogado.nome));
     
     if (meusChamados.length === 0) {
-        container.innerHTML = `<p class="section-subtitle">Nenhum chamado aberto no momento.</p>`;
+        container.innerHTML = `<p class="section-subtitle">Você não possui chamados abertos no momento.</p>`;
         return;
     }
 
@@ -395,18 +458,18 @@ function resolverChamado(id) {
     chamados = chamados.filter(c => c.id !== id);
     localStorage.setItem('nexus_chamados', JSON.stringify(chamados));
     carregarPainelAtendente();
-    alert('Chamado marcado como resolvido!');
+    mostrarToast('Chamado marcado como resolvido!', 'success');
 }
 
 function atenderChat(idx) {
-    alert('Você assumiu a conversa com o cliente. O atendimento humano foi conectado.');
+    mostrarToast('Você assumiu a conversa com o cliente.', 'success');
     conversasChat.splice(idx, 1);
     localStorage.setItem('nexus_chats', JSON.stringify(conversasChat));
     carregarPainelAtendente();
 }
 
 // ==========================================
-// CHATBOT E TÓPICOS INTERATIVOS
+// CHATBOT E HISTÓRICO DE ATENDIMENTO
 // ==========================================
 function toggleChatbot() {
     const janela = document.getElementById('chatbot-window');
@@ -455,6 +518,7 @@ async function enviarMensagemChat() {
     if (!texto) return;
 
     adicionarMensagemUI(texto, 'user');
+    salvarHistoricoChat(texto, 'user');
     input.value = '';
 
     const eraPrimeiraMensagem = !primeiraMensagemEnviada;
@@ -464,6 +528,7 @@ async function enviarMensagemChat() {
         setTimeout(() => {
             const resp = gerarRespostaSimulada(texto);
             adicionarMensagemUI(resp, 'bot');
+            salvarHistoricoChat(resp, 'bot');
             if (eraPrimeiraMensagem) {
                 adicionarTopicosSugestoesUI();
             }
@@ -503,6 +568,7 @@ async function enviarMensagemChat() {
         const data = await response.json();
         const respostaIA = data.choices[0].message.content;
         adicionarMensagemUI(respostaIA, 'bot');
+        salvarHistoricoChat(respostaIA, 'bot');
 
         if (eraPrimeiraMensagem) {
             adicionarTopicosSugestoesUI();
@@ -512,11 +578,45 @@ async function enviarMensagemChat() {
         removerMensagemCarregamento();
         const respostaFallback = gerarRespostaSimulada(texto);
         adicionarMensagemUI(respostaFallback, 'bot');
+        salvarHistoricoChat(respostaFallback, 'bot');
 
         if (eraPrimeiraMensagem) {
             adicionarTopicosSugestoesUI();
         }
     }
+}
+
+function salvarHistoricoChat(texto, remetente) {
+    historicoChatSessao.push({ texto, remetente });
+    localStorage.setItem('nexus_chat_historico', JSON.stringify(historicoChatSessao));
+}
+
+function carregarHistoricoChatUI() {
+    const container = document.getElementById('chatbot-messages');
+    if (!container || historicoChatSessao.length === 0) return;
+
+    // Mantém a saudação inicial e anexa o histórico salvo
+    historicoChatSessao.forEach(msg => {
+        if (msg.remetente === 'user') {
+            container.innerHTML += `
+                <div class="chat-msg-row user">
+                    <div class="chat-bubble user">${msg.texto}</div>
+                </div>
+            `;
+        } else {
+            container.innerHTML += `
+                <div class="chat-msg-row bot">
+                    <div class="chat-avatar-bot"><i class="fa-solid fa-robot"></i></div>
+                    <div class="chat-bubble bot">${msg.texto}</div>
+                </div>
+            `;
+        }
+    });
+
+    if (historicoChatSessao.length > 0) {
+        adicionarTopicosSugestoesUI();
+    }
+    container.scrollTop = container.scrollHeight;
 }
 
 function adicionarTopicosSugestoesUI() {
@@ -573,6 +673,7 @@ function removerMensagemCarregamento() {
 
 function solicitarAtendimentoHumano() {
     adicionarMensagemUI("Solicitação de atendimento humano acionada. Transferindo para um analista de plantão...", 'bot');
+    salvarHistoricoChat("Solicitação de atendimento humano acionada. Transferindo para um analista de plantão...", 'bot');
 
     const novoChat = {
         cliente: usuarioLogado ? usuarioLogado.nome : 'Visitante Anônimo',
@@ -582,7 +683,9 @@ function solicitarAtendimentoHumano() {
     localStorage.setItem('nexus_chats', JSON.stringify(conversasChat));
 
     setTimeout(() => {
-        adicionarMensagemUI("Você está na fila de atendimento humano. Um de nossos atendentes da Nexus Core assumirá a conversa em instantes.", 'bot');
+        const msgHumano = "Você está na fila de atendimento humano. Um de nossos atendentes da Nexus Core assumirá a conversa em instantes.";
+        adicionarMensagemUI(msgHumano, 'bot');
+        salvarHistoricoChat(msgHumano, 'bot');
         if (usuarioLogado && usuarioLogado.tipo === 'atendente') {
             carregarPainelAtendente();
         }
