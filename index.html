@@ -294,7 +294,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="cad-senha">Senha</label>
-                        <input type="password" id="cad-senha" oninput="avaliarForcaSenha(this.value)" required class="modal-input" placeholder="••••••••">
+                        <input type="password" id="cad-senha" oninput="avaliarForcaSenha(this.value, 'password-strength-bar', 'password-strength-text')" required class="modal-input" placeholder="••••••••">
                         <!-- Barra de Força de Senha -->
                         <div class="password-strength-container">
                             <div id="password-strength-bar" class="password-strength-bar"></div>
@@ -338,7 +338,12 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="recup-nova-senha">Nova Senha</label>
-                        <input type="password" id="recup-nova-senha" required class="modal-input" placeholder="••••••••">
+                        <input type="password" id="recup-nova-senha" oninput="avaliarForcaSenha(this.value, 'recup-strength-bar', 'recup-strength-text')" required class="modal-input" placeholder="••••••••">
+                        <!-- Barra de Força de Senha na Redefinição -->
+                        <div class="password-strength-container">
+                            <div id="recup-strength-bar" class="password-strength-bar"></div>
+                        </div>
+                        <span id="recup-strength-text" class="text-xs text-slate-400">Força da senha: Digite uma senha</span>
                     </div>
                     <button type="submit" class="btn-primary w-full mt-2">Redefinir Senha</button>
                 </form>

@@ -70,11 +70,11 @@ function validarEmail(email) {
 }
 
 // ==========================================
-// AVALIADOR DE FORÇA DE SENHA (VISUAL)
+// AVALIADOR DE FORÇA DE SENHA (DINÂMICO)
 // ==========================================
-function avaliarForcaSenha(senha) {
-    const barra = document.getElementById('password-strength-bar');
-    const texto = document.getElementById('password-strength-text');
+function avaliarForcaSenha(senha, barId = 'password-strength-bar', textId = 'password-strength-text') {
+    const barra = document.getElementById(barId);
+    const texto = document.getElementById(textId);
     if (!barra || !texto) return;
 
     if (!senha) {
