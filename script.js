@@ -34,6 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
+// VALIDADOR DE E-MAIL PADRÃO
+// ==========================================
+function validarEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// ==========================================
 // NAVEGAÇÃO DE SEÇÕES (Single Page Application pura)
 // ==========================================
 function mostrarSecao(secaoId) {
@@ -122,11 +130,16 @@ let emailParaRecuperacao = "";
 function enviarCodigoRecuperacao(e) {
     e.preventDefault();
     const emailInput = document.getElementById('recup-email').value.trim();
-    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
 
+    if (!validarEmail(emailInput)) {
+        alert('❌ Por favor, informe um endereço de e-mail válido.');
+        return;
+    }
+
+    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
     const usuarioExiste = listaUsuarios.find(u => u.email === emailInput);
     if (!usuarioExiste) {
-        alert('Este e-mail não foi encontrado na base corporativa.');
+        alert('❌ Este e-mail não possui cadastro no sistema.');
         return;
     }
 
@@ -148,6 +161,16 @@ function redefinirSenha(e) {
     }
 
     let listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
+    const usuarioAlvo = listaUsuarios.find(u => u.email === emailParaRecuperacao);
+
+    if (usuarioAlvo) {
+        // Validação: Impede que o usuário mude para a mesma senha atual
+        if (usuarioAlvo.senha === novaSenha) {
+            alert('❌ A nova senha não pode ser idêntica à sua senha atual. Escolha uma senha diferente.');
+            return;
+        }
+    }
+
     listaUsuarios = listaUsuarios.map(u => {
         if (u.email === emailParaRecuperacao) {
             u.senha = novaSenha;
@@ -170,10 +193,15 @@ function fazerCadastro(e) {
     const senha = document.getElementById('cad-senha').value;
     const tipo = document.getElementById('cad-tipo').value;
 
+    if (!validarEmail(email)) {
+        alert('❌ O e-mail informado não é válido. Verifique o formato (ex: nome@dominio.com).');
+        return;
+    }
+
     const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
     
     if (listaUsuarios.some(u => u.email === email)) {
-        alert('Este e-mail já está cadastrado.');
+        alert('❌ Este e-mail já está cadastrado no sistema. Tente fazer login.');
         return;
     }
 
@@ -186,7 +214,7 @@ function fazerCadastro(e) {
 
     fecharModal();
     atualizarNavbarAuth();
-    alert(`Cadastro realizado com sucesso! Bem-vindo(a), ${nome}`);
+    alert(`✅ Cadastro realizado com sucesso! Bem-vindo(a), ${nome}`);
 
     if (tipo === 'atendente') {
         mostrarSecao('painel-atendente');
@@ -202,21 +230,33 @@ function fazerLogin(e) {
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
 
-    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
-    const usuarioEncontrado = listaUsuarios.find(u => u.email === email && u.senha === senha);
-
-    if (usuarioEncontrado) {
-        usuarioLogado = usuarioEncontrado;
-    } else {
-        const tipoInferido = (email.includes('admin') || email.includes('suporte') || email.includes('atendente')) ? 'atendente' : 'cliente';
-        usuarioLogado = { nome: email.split('@')[0], email, tipo: tipoInferido };
+    if (!validarEmail(email)) {
+        alert('❌ Insira um formato de e-mail válido.');
+        return;
     }
 
+    const listaUsuarios = JSON.parse(localStorage.getItem('nexus_usuarios_cadastrados')) || [];
+    
+    // Verifica se o usuário existe na base
+    const usuarioCadastrado = listaUsuarios.find(u => u.email === email);
+    if (!usuarioCadastrado) {
+        alert('❌ Este e-mail não possui uma conta registrada. Por favor, cadastre-se primeiro.');
+        alternarModalPara('cadastro');
+        return;
+    }
+
+    // Verifica se a senha confere
+    if (usuarioCadastrado.senha !== senha) {
+        alert('❌ Senha incorreta. Tente novamente ou utilize a recuperação de senha.');
+        return;
+    }
+
+    usuarioLogado = usuarioCadastrado;
     localStorage.setItem('nexus_usuario', JSON.stringify(usuarioLogado));
 
     fecharModal();
     atualizarNavbarAuth();
-    alert(`Login efetuado com sucesso! Bem-vindo(a), ${usuarioLogado.nome} (${usuarioLogado.tipo.toUpperCase()})`);
+    alert(`✅ Login efetuado com sucesso! Bem-vindo(a), ${usuarioLogado.nome} (${usuarioLogado.tipo.toUpperCase()})`);
 
     if (usuarioLogado.tipo === 'atendente') {
         mostrarSecao('painel-atendente');
