@@ -118,10 +118,17 @@ function mostrarSecao(secaoId) {
         }
     });
 
-    if (secaoId === 'abrir-chamado' && usuarioLogado && usuarioLogado.tipo === 'atendente') {
-        mostrarToast('Atendentes gerenciam chamados diretamente no painel de suporte.', 'info');
-        mostrarSecao('painel-atendente');
-        return;
+    if (secaoId === 'abrir-chamado') {
+        if (!usuarioLogado) {
+            mostrarToast('Você precisa estar logado como cliente para abrir chamados.', 'error');
+            abrirModal('login');
+            return;
+        }
+        if (usuarioLogado.tipo === 'atendente') {
+            mostrarToast('Atendentes gerenciam chamados diretamente no painel de suporte.', 'info');
+            mostrarSecao('painel-atendente');
+            return;
+        }
     }
 
     const alvo = document.getElementById(`secao-${secaoId}`) || document.getElementById(secaoId);
@@ -355,12 +362,12 @@ function atualizarNavbarAuth() {
 }
 
 // ==========================================
-// CHAMADOS DE SUPORTE (COM FILTRAGEM POR USUÁRIO)
+// CHAMADOS DE SUPORTE (COM FILTRAGEM POR CLIENTE)
 // ==========================================
 function enviarChamado(e) {
     e.preventDefault();
-    if (!usuarioLogado) {
-        mostrarToast('Você precisa estar logado para abrir um chamado.', 'error');
+    if (!usuarioLogado || usuarioLogado.tipo !== 'cliente') {
+        mostrarToast('Apenas clientes logados podem abrir chamados.', 'error');
         abrirModal('login');
         return;
     }
@@ -386,20 +393,14 @@ function enviarChamado(e) {
     document.getElementById('chamado-assunto').value = '';
     document.getElementById('chamado-descricao').value = '';
 
-    if (usuarioLogado.tipo === 'atendente') {
-        carregarPainelAtendente();
-        mostrarSecao('painel-atendente');
-    } else {
-        carregarPainelCliente();
-        mostrarSecao('painel-cliente');
-    }
+    carregarPainelCliente();
+    mostrarSecao('painel-cliente');
 }
 
 function carregarPainelCliente() {
     const container = document.getElementById('lista-chamados-cliente');
     if (!container) return;
 
-    // Filtra para exibir apenas os chamados abertos pelo usuário logado atual
     const meusChamados = chamados.filter(c => usuarioLogado && (c.emailAutor === usuarioLogado.email || c.autor === usuarioLogado.nome));
     
     if (meusChamados.length === 0) {
@@ -595,7 +596,6 @@ function carregarHistoricoChatUI() {
     const container = document.getElementById('chatbot-messages');
     if (!container || historicoChatSessao.length === 0) return;
 
-    // Mantém a saudação inicial e anexa o histórico salvo
     historicoChatSessao.forEach(msg => {
         if (msg.remetente === 'user') {
             container.innerHTML += `
