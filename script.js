@@ -1,6 +1,11 @@
+// ==========================================
+// CONFIGURAÇÃO DA API DO HUGGING FACE (LLAMA 3)
+// ==========================================
+const HF_API_KEY = CONFIG.HUGGING_FACE_KEY;
 
-const HF_API_KEY = "hf_jZSjOMnjkqQPfkqAcAEoqaoEdCytLrKlC";
-
+// ==========================================
+// ESTADO GLOBAL DA APLICAÇÃO & DADOS INICIAIS
+// ==========================================
 const usuariosManuaisPreCadastrados = [
     { nome: "Carlos Cliente", email: "cliente@nexus.com", senha: "123", tipo: "cliente" },
     { nome: "Ana Suporte TI", email: "atendente@nexus.com", senha: "123", tipo: "atendente" }
@@ -29,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// NAVEGAÇÃO DE SEÇÕES (Single Page Application)
+// NAVEGAÇÃO DE SEÇÕES (Single Page Application pura)
 // ==========================================
 function mostrarSecao(secaoId) {
     const secoes = ['home', 'status', 'faq', 'abrir-chamado', 'painel-cliente', 'painel-atendente'];
@@ -78,7 +83,7 @@ function mudarFonte(acao) {
 }
 
 // ==========================================
-// MODAL DE AUTENTICAÇÃO E RECUPERAÇÃO
+// MODAL DE AUTENTICAÇÃO E RECUPERAÇÃO DE SENHA
 // ==========================================
 function abrirModal(tipo) {
     const modal = document.getElementById('auth-modal');
